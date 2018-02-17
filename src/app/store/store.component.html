@@ -1,3 +1,25 @@
-<p>
-  store works!
-</p>
+<div class="container">
+  <nav class="navbar navbar-light bg-dark">
+    <h1 class="navbar-brand mb-0" style="color: white;">SPORTS STORE</h1>
+  </nav>
+  <div class="container">
+    <div class="row">
+      <div class="col-3 bg-info p-a-1">
+        {{categories.length}} Categories
+      </div>
+      <div class="col-9 p-a-1">
+        <div *ngFor="let product of products" class="card card-outline-primary">
+          <h4 class="card-header">
+            {{product.name}}
+            <span class="badge badge-primary">
+            {{ product.price | currency:"USD":true:"2.2-2" }}
+          </span>
+          </h4>
+          <div class="card-text p-a-1">{{product.description}}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
