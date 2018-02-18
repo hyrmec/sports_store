@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpResponse } from '@angular/common/http';
+import {HttpClient, HttpEvent, HttpHeaders} from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import { Product } from './product.model';
 import { Cart } from './cart.model';
@@ -10,20 +10,57 @@ const PORT = 3500;
 @Injectable()
 export class RestDataSource {
   baseUrl: string;
-  auth_token: string;
+  auth_token: any;
 
   constructor(private http: HttpClient) {
     this.baseUrl = `${PROTOCOL}://${location.hostname}:${PORT}/`;
   }
-
   authenticate(user: string, pass: string): Observable<boolean> {
-    return this.http.post<boolean>(this.baseUrl + 'login', { name: user, password: pass });
+    return this.http.request('post', this.baseUrl + 'login', {body: {name: user, password: pass}})
+      .map(response => {
+        const r: any = response;
+        this.auth_token = r.success ? r.token : null;
+        return r.success;
+      });
   }
 
-  getProducts(): Observable<Product[]> {
-    return this.http.get<Product[]>(this.baseUrl + 'products');
+  getProducts(): Observable<any[]> {
+    return this.sendRequest('get', 'products');
   }
-  saveOrder(order: Order): Observable<Order> {
-    return this.http.post<Order>(this.baseUrl + 'products', order);
+
+  saveProduct(product: Product): Observable<any> {
+    return this.sendRequest('post', 'products', product, true);
+  }
+
+  updateProduct(product): Observable<any> {
+    return this.sendRequest('put', `products/${product.id}`, product, true);
+  }
+
+  deleteProduct(id: number): Observable<any> {
+    return this.sendRequest('delete', `products/${id}`, null, true);
+  }
+
+  getOrders(): Observable<Order[]> {
+    return this.sendRequest('get', 'orders', null, true);
+  }
+
+  deleteOrder(id: number): Observable<any> {
+    return this.sendRequest('delete', `orders/${id}`, null, true);
+  }
+
+  updateOrder(order: Order): Observable<any> {
+    return this.sendRequest('put', `orders/${order.id}`, order, true);
+  }
+
+  saveOrder(order: Order): Observable<any> {
+    return this.sendRequest('post', 'orders', order);
+  }
+
+  private sendRequest(method: string, url: string, body?: Product | Order, auth: boolean = false): Observable<any> {
+    const options: any = {body: body};
+    if (auth && this.auth_token != null) {
+      options['headers'] = {'Authorization': `Bearer<${this.auth_token}>`};
+    }
+    return this.http.request(method, this.baseUrl + url, options);
   }
 }
